@@ -2,43 +2,12 @@ import os
 import sys
 from collections import deque
 
+import requests
+
 
 class TextBasedBrowser:
 
     def __init__(self):
-        self.nytimes_com = '''
-This New Liquid Is Magnetic, and Mesmerizing
-
-Scientists have created “soft” magnets that can flow 
-and change shape, and that could be a boon to medicine 
-and robotics. (Source: New York Times)
-
-
-Most Wikipedia Profiles Are of Men. This Scientist Is Changing That.
-
-Jessica Wade has added nearly 700 Wikipedia biographies for
- important female and minority scientists in less than two 
- years.
-
-'''
-        self.bloomberg_com = '''
-The Space Race: From Apollo 11 to Elon Musk
-
-It's 50 years since the world was gripped by historic images
- of Apollo 11, and Neil Armstrong -- the first man to walk 
- on the moon. It was the height of the Cold War, and the charts
- were filled with David Bowie's Space Oddity, and Creedence's 
- Bad Moon Rising. The world is a very different place than 
- it was 5 decades ago. But how has the space race changed since
- the summer of '69? (Source: Bloomberg)
-
-
-Twitter CEO Jack Dorsey Gives Talk at Apple Headquarters
-
-Twitter and Square Chief Executive Officer Jack Dorsey 
- addressed Apple Inc. employees at the iPhone maker’s headquarters
- Tuesday, a signal of the strong ties between the Silicon Valley giants.
-'''
         self.history = deque()
         self.dir_for_file = 'dir'
 
@@ -52,25 +21,22 @@ Twitter and Square Chief Executive Officer Jack Dorsey
             pass
 
     def create_file(self, file_name, file_data):
-        with open(f'{self.dir_for_file}/{file_name}', 'w', encoding='utf-8') as file:
+        with open(f'{self.dir_for_file}/{file_name}.txt', 'w', encoding='utf-8') as file:
             file.write(file_data)
 
     def ask_site(self):
         while True:
-            sites = ['bloomberg.com', 'bloomberg', 'nytimes.com', 'nytimes']
             enter_site = input().strip()
             if enter_site == 'back':
                 return 'back'
             elif enter_site == 'exit':
                 return 'exit'
-            elif enter_site in sites:
-                return enter_site
             else:
-                return 'error'
+                return enter_site
 
     def check_read_file(self, filename):
         try:
-            with open(f'{self.dir_for_file}/{filename}', 'r', encoding='utf-8') as file:
+            with open(f'{self.dir_for_file}/{filename}.txt', 'r', encoding='utf-8') as file:
                 return file.read()
         except FileNotFoundError:
             return 'no file'
@@ -96,18 +62,24 @@ Twitter and Square Chief Executive Officer Jack Dorsey
                 self.work_with_site(site)
 
     def work_with_site(self, site):
-        site_short = site.rstrip(".com")
-        file_name = 'self.' + site.replace('.', '_')
-        if site == site_short:
+        cutter = site.rfind('.', -5)
+        if cutter != -1:
+            site_short = site[:cutter]
+            text_site = self.get_content(site)
+            self.create_file(site_short, text_site)
+            print(text_site)
+        else:
+            site_short = site
             check = self.check_read_file(site_short)
             if check == 'no file':
                 print("Error: Incorrect URL\n")
+                return
             else:
                 print(check)
-                return
-        else:
-            self.create_file(site_short, eval(file_name))
-            print(eval(file_name))
+
+    def get_content(self, url):
+        full_url = "http://" + url
+        return requests.get(full_url).text
 
 
 browser = TextBasedBrowser()
